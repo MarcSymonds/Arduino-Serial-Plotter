@@ -16,6 +16,9 @@ The data should be in the format that the Arduino Serial Plotter uses, which is 
 
 > ***label***:***value***,***label***:***value*** ...
 
+
+Note that each message recvieved, and its parsed parameters, constitute to one data point on the graph. If a message does not contain a ***label***/***value*** pair, then the graph will have a gap for that parameter where the value was missing.
+
 ---
 
 MIT License. See the LICENSE file for details.
