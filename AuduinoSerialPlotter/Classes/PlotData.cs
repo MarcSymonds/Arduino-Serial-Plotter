@@ -44,7 +44,7 @@ namespace AuduinoSerialPlotter {
 		/// number (integer or decimal). A comma is used to separate multiple label-value pairs in the 
 		/// received data.
 		/// </summary>
-		private Regex extract = new Regex(@"(?<label>[-_a-z][-_a-z0-9]*)\s*:\s*(?<value>-?\d+(\.\d+)?)", RegexOptions.IgnoreCase);
+		private Regex extract = new Regex(@"(?<label>[-_a-z][^:]*)\s*:\s*(?<value>-?\d+(\.\d+)?)", RegexOptions.IgnoreCase);
 
 
 		private List<string> RemovedParameters = new List<string>();
