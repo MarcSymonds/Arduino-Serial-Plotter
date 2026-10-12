@@ -26,27 +26,50 @@ namespace AuduinoSerialPlotter {
 		}
 
 		private bool ListCOMPorts(string? defaultCOMPort = null) {
-			string? current = cbPort.SelectedItem?.ToString();// cbPointsToDisplay.SelectedIndex < 0 ? string.Empty : cbPort.Items[cbPort.SelectedIndex].ToString();
 			bool stillHasCurrent = false;
 
-			cbPort.Items.Clear();
-			cbPort.Items.AddRange(SerialPort.GetPortNames());
+			cbPort.SelectedIndexChanged -= cbPort_SelectedIndexChanged;
 
-			if (defaultCOMPort != null)
-				current = defaultCOMPort;
+			string[] portNames = SerialPort.GetPortNames();
 
-			if (current != null) {
+			foreach (string portName in portNames) {
+				bool exists = false;
+
 				for (int i = 0; i < cbPort.Items.Count; i++) {
-					if (cbPort.Items[i].Equals(current)) {
-						cbPort.SelectedIndex = i;
-						stillHasCurrent = true;
+					if (portName.Equals(cbPort.Items[i].ToString())) {
+						exists = true;
 						break;
 					}
 				}
+
+				if (!exists)
+					cbPort.Items.Add(portName);
 			}
 
-			if (cbPort.SelectedIndex < 0 && cbPort.Items.Count > 0)
+			int defaultIdx = -1;
+
+			for (int i = cbPort.Items.Count - 1; i >= 0; i--) {
+				if (!portNames.Contains(cbPort.Items[i].ToString())) {
+					if (i == cbPort.SelectedIndex)
+						cbPort.SelectedIndex = -1;
+
+					cbPort.Items.RemoveAt(i);
+
+					if (i < defaultIdx)
+						--defaultIdx;
+				}
+				else if (defaultCOMPort != null && defaultCOMPort.Equals(cbPort.Items[i].ToString()))
+					defaultIdx = i;
+			}
+
+			cbPort.SelectedIndexChanged += cbPort_SelectedIndexChanged;
+
+			if (defaultIdx >= 0 && defaultIdx != cbPort.SelectedIndex)
+				cbPort.SelectedIndex = defaultIdx;
+			else if (cbPort.SelectedIndex < 0 && cbPort.Items.Count > 0)
 				cbPort.SelectedIndex = 0;
+			else
+				stillHasCurrent = true;
 
 			return stillHasCurrent;
 		}
@@ -56,7 +79,9 @@ namespace AuduinoSerialPlotter {
 		}
 
 		private void cbPort_SelectedIndexChanged(object? sender, EventArgs e) {
-			ChangeDevice();
+			if (cbPort.Tag == null || (bool)cbPort.Tag == false) {
+				ChangeDevice();
+			}
 		}
 
 		public void ChangeDevice(bool startReading = true) {
