@@ -326,6 +326,7 @@
 			cbPort.Margin = new Padding(2);
 			cbPort.Name = "cbPort";
 			cbPort.Size = new Size(75, 23);
+			cbPort.Sorted = true;
 			cbPort.TabIndex = 0;
 			tooltip.SetToolTip(cbPort, "Select COM port");
 			// 
