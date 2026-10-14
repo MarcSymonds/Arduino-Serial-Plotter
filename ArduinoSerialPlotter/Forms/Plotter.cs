@@ -347,7 +347,15 @@ namespace AuduinoSerialPlotter {
 
 					if (_graphData.yRange <= 10)
 						yStep = 1;
-					else if (_graphData.yRange < 50)
+					else {
+						yStep = (int)(_graphData.yRange / 20);
+
+						if (yStep < 1)
+							yStep = 1;
+					}
+
+
+					/*else if (_graphData.yRange < 50)
 						yStep = 5;
 					else if (_graphData.yRange < 100)
 						yStep = 10;
@@ -355,8 +363,16 @@ namespace AuduinoSerialPlotter {
 						yStep = 50;
 					else if (_graphData.yRange < 1000)
 						yStep = 100;
-					else
+					else if (_graphData.yRange < 10000)
 						yStep = 500;
+					else if (_graphData.yRange < 50000)
+						yStep = 1000;
+					else if (_graphData.yRange < 100000)
+						yStep = 2000;
+					else if (_graphData.yRange < 140000)
+						yStep = 2500;
+					else
+						yStep = 3000;*/
 
 					float rem = _graphData.maxValue.Value % yStep;
 
@@ -672,40 +688,38 @@ namespace AuduinoSerialPlotter {
 					List<Control> pointLabels = new List<Control>();
 
 					float offset = 24f;
+					bool rightAligned = false;
 
-					Size size = new Size(100, 50);
+					Size size = new Size(200, 46);
 
 					float labelXPos = (int)(xPos - size.Width - offset);
 
-					if (labelXPos < physicalSpace.Left)
+					if (labelXPos < physicalSpace.Left) {
 						labelXPos = (int)xPos + offset;
+						rightAligned = true;
+					}
+
+					bool leftSide = (xPos < (physicalSpace.Width / 2));
 
 					foreach (var sortedLabel in labelSorting) {
 						var plotLine = sortedLabel.PlotLine;
 
 						float yPos = (float)(physicalSpace.Bottom - ((sortedLabel.Value - _graphData.yBottom) * _graphData.scaleY));
 
-						// Initial position for the label.
-						//
-						Point location = new Point((int)labelXPos, (int)yPos - (size.Height / 2));
-
-						// If this label will overlap another label, then adjust it's position.
-						//
-						foreach (var pl in pointLabels) {
-							if (location.Y + size.Height >= pl.Location.Y && location.Y <= pl.Location.Y + pl.Size.Height)
-								location = new Point(location.X, pl.Location.Y - size.Height - 2);
-						}
-
 						Panel pnlLabel = new Panel() {
-							Location = location,
-							Size = size,
+							Width = size.Width,
+							Height = size.Height,
 							BackColor = Color.White,
 							BorderStyle = BorderStyle.FixedSingle,
+							AutoSize = false,
+							AutoSizeMode = AutoSizeMode.GrowAndShrink,
 						};
 
 						Label pointLabel = new Label() {
-							Location = new Point(5, 5),
-							Size = new Size(size.Width, 26),
+							Top = 5,
+							Left = 5,
+							Width = size.Width,
+							Height = 26,
 							BackColor = Color.Transparent,
 							ForeColor = plotLine.Color,
 							Font = pnlGraph.Font,
@@ -718,8 +732,10 @@ namespace AuduinoSerialPlotter {
 						pnlLabel.Controls.Add(pointLabel);
 
 						Panel pointIndicator = new Panel() {
-							Location = new Point(5, 24),
-							Size = new Size(14, 15),
+							Top = 24,
+							Left = 5,
+							Width = 14,
+							Height = 15,
 							BackColor = plotLine.Color,
 							BorderStyle = BorderStyle.FixedSingle,
 						};
@@ -738,6 +754,55 @@ namespace AuduinoSerialPlotter {
 
 						pnlLabel.Controls.Add(pointValue);
 
+						// Determine the size of the label, and adjust it's width accordingly.
+						// This is so the label doesn't have a load of white space in it.
+						//
+						Size s = pnlLabel.GetPreferredSize(size);
+
+						pnlLabel.Size = new Size(s.Width, size.Height);
+
+						// Initial position for the label.
+						//
+						int labelX = (int)labelXPos;
+
+						if (!rightAligned)
+							labelX += (size.Width - s.Width);
+
+						pnlLabel.Left = labelX;
+						pnlLabel.Top = (int)yPos - (size.Height / 2);
+
+						// If this label will overlap another label, then adjust it's position.
+						//
+						bool tryAgain = true;
+
+						while (tryAgain) {
+							tryAgain = false;
+
+							foreach (var pl in pointLabels) {
+								if (pnlLabel.Top + pnlLabel.Height >= pl.Top && pnlLabel.Top <= pl.Top + pl.Height) {
+									pnlLabel.Top = pl.Top - size.Height - 2;
+									tryAgain = true;
+									break;
+								}
+							}
+						}
+
+						if (pnlLabel.Top < 0) {
+							pnlLabel.Top = 0;
+
+							tryAgain = true;
+							while (tryAgain) {
+								tryAgain = false;
+
+								foreach (var pl in pointLabels) {
+									if (pnlLabel.Top + pnlLabel.Height >= pl.Top && pnlLabel.Top <= pl.Top + pl.Height) {
+										pnlLabel.Top = pl.Top + size.Height + 2;
+										tryAgain = true;
+										break;
+									}
+								}
+							}
+						}
 
 						pointLabels.Add(pnlLabel);
 
