@@ -771,7 +771,7 @@ namespace AuduinoSerialPlotter {
 						pnlLabel.Left = labelX;
 						pnlLabel.Top = (int)yPos - (size.Height / 2);
 
-						// If this label will overlap another label, then adjust it's position.
+						// If this label will overlap another label, then adjust its position.
 						//
 						bool tryAgain = true;
 
